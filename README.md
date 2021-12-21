@@ -44,4 +44,12 @@ may have to change Open position times - got stuck and added +8hr in the end
 
 df['timestamp'] = df['timestamp'] + 28800000
 
+Notes
+
+* I add the Realised and unrealised to give me the position - otherwise i end up down when i think I'm up
+* include fees - again for the above reason
+* Pause is only done when th single/Pause file exists - not when manual
+* expect can be slow if large open position due to the 3rd part request for current price 
+ 
+
 
