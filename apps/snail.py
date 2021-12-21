@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import datetime
 from datetime import datetime
+from dateutil import tz
 
 import streamlit as st
 import os
@@ -131,7 +132,7 @@ def getclosedtrades(key):
       #If Test does not exist, check for live
     open_order_file = '/home/pi/bots/' + key + '/test_coins_bought.json'  
     if not os.path.isfile(open_order_file):
-         closed_trades_file  = '/home/pi/bots/' + key + '/live_coins_bought.json'
+         open_order_file  = '/home/pi/bots/' + key + '/live_coins_bought.json'
 
     if os.path.isfile(open_order_file):
         #data = pd.read_json(open_order_file,orient='columns') #path folder of the data file
@@ -139,7 +140,9 @@ def getclosedtrades(key):
         #   data = pd.read_json(f)
         data = json.load(open(open_order_file, "r"))
         df = pd.DataFrame.from_dict(data, orient="index")
-        df['timestamp']= pd.to_datetime(df['timestamp'],unit='s')
+        df['timestamp'] = df['timestamp'] + 28800000
+        df['timestamp']= pd.to_datetime(df['timestamp'],unit='ms')
+        #df['timestamp'] = df['timestamp'].dt.tz_convert('Asia_Hong_Kong')
         df['bought_at'] = df['bought_at'].astype(float)
         df['CurrentPx'] = df['symbol'] 
         df['CurrentPx'] = df['CurrentPx'].apply(get_px)
@@ -147,8 +150,9 @@ def getclosedtrades(key):
         #df['EstProfit'] = 
         #df['EstProfit'] = df.apply(lambda x: (t(df['CurrentPx'])) - float((df['bought_at'])))
         df['PriceDiff'] =  df['CurrentPx'] - df['bought_at']
+        df['EstSellPx'] = df['bought_at'] * 1.02
         df = df.sort_values(by='timestamp', ascending=False)
-        df = df[['timestamp', 'symbol', 'bought_at', 'CurrentPx', 'PriceDiff', 'stop_loss', 'take_profit']]
+        df = df[['timestamp', 'symbol', 'bought_at', 'CurrentPx', 'PriceDiff','EstSellPx', 'stop_loss', 'take_profit']]
         st.header('Open Positions')
         #df['symbol'] = df['symbol'].apply(make_clickable)
         #df = df.to_html(escape=False)

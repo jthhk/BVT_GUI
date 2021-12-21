@@ -131,7 +131,7 @@ def getclosedtrades(key):
       #If Test does not exist, check for live
     open_order_file = '/home/pi/bots/' + key + '/test_coins_bought.json'  
     if not os.path.isfile(open_order_file):
-         closed_trades_file  = '/home/pi/bots/' + key + '/live_coins_bought.json'
+         open_order_file  = '/home/pi/bots/' + key + '/live_coins_bought.json'
 
     if os.path.isfile(open_order_file):
         #data = pd.read_json(open_order_file,orient='columns') #path folder of the data file
