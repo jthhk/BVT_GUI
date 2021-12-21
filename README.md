@@ -46,6 +46,7 @@ df['timestamp'] = df['timestamp'] + 28800000
 
 Notes
 
+* reads from the output files from BVT
 * I add the Realised and unrealised to give me the position - otherwise i end up down when i think I'm up
 * include fees - again for the above reason
 * Pause is only done when the "single/Pause" file exists - not when manual
