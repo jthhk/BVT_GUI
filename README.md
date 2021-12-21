@@ -1,6 +1,6 @@
 # BVT_GUI
 
-For my personal use but happy of people to reference 
+For my personal use but happy for people to reference 
 
 * install Streamlit
 * each folder you need to manually add to 
