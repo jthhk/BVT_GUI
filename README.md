@@ -18,7 +18,7 @@ For my personal use but happy for people to reference
 
 
 
-app.add_app("YOURFOLDER", snail.app)
+app.add_app("Snail", snail.app)
 
 
 
