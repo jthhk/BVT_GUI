@@ -200,5 +200,5 @@ def app():
     with my_expander:
         clicked = my_widget('Scalper')
 
-    getclosedtrades('Scalper')
+    gettrades('Scalper')
  
