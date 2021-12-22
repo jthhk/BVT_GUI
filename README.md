@@ -51,6 +51,7 @@ Notes
 * include fees - again for the above reason
 * Pause is only done when the "siginal/Pause" file exists - not when manual
 * expect can be slow if large open position due to the 3rd party request for current price 
- 
+* runs on a raspberry pi (you need to install the 64bit OS tp get streamlit installed 
+*  
 
 
