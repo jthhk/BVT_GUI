@@ -25,20 +25,23 @@ def modification_date(filename):
 
 def my_widget(key):
 
+    global BotsHomeDir
+    # path to the saved transactions history
+    BotsHomeDir = "/home/pi/bots/"
     # path to the saved transactions history
     trading_mode = "test"
     Bot_Is_Paused = False
 
-    profile_summary_file = '/home/pi/bots/' + key \
+    profile_summary_file = BotsHomeDir + key \
         + '/test_bot_stats.json'
     (col1, col2) = st.columns([1, 3])
 
     #If Test does not exist, check for live
     if not os.path.isfile(profile_summary_file):
-         profile_summary_file = '/home/pi/bots/' + key + '/live_bot_stats.json'
+         profile_summary_file = BotsHomeDir + key + '/live_bot_stats.json'
          trading_mode = "live"
 
-    if os.path.isfile('/home/pi/bots/' + key + '/signals/pausebot.pause'):
+    if os.path.isfile(BotsHomeDir + key + '/signals/pausebot.pause'):
          Bot_Is_Paused = True
 
     if os.path.isfile(profile_summary_file):

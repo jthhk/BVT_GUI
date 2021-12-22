@@ -29,20 +29,21 @@ def modification_date(filename):
 
 
 def my_widget(key):
-
+    global BotsHomeDir
     # path to the saved transactions history
+    BotsHomeDir = "/home/pi/bots/"
     trading_mode = "test"
     Bot_Is_Paused = False
 
-    profile_summary_file = '/home/pi/bots/' + key + '/test_bot_stats.json'  
+    profile_summary_file = BotsHomeDir + key + '/test_bot_stats.json'  
     (col1, col2) = st.columns([1, 3])
 
     #If Test does not exist, check for live
     if not os.path.isfile(profile_summary_file):
-         profile_summary_file = '/home/pi/bots/' + key + '/live_bot_stats.json'
+         profile_summary_file = BotsHomeDir + key + '/live_bot_stats.json'
          trading_mode = "live"
 
-    if os.path.isfile('/home/pi/bots/' + key + '/signals/pausebot.pause'):
+    if os.path.isfile(BotsHomeDir + key + '/signals/pausebot.pause'):
          Bot_Is_Paused = True
 
     if os.path.isfile(profile_summary_file):
@@ -127,42 +128,36 @@ def get_px(link):
     return price
     
 
-def getclosedtrades(key):
+def gettrades(key):
 
-      #If Test does not exist, check for live
-    open_order_file = '/home/pi/bots/' + key + '/test_coins_bought.json'  
+    global BotsHomeDir
+    #If Test does not exist, check for live
+    open_order_file = BotsHomeDir + key + '/test_coins_bought.json'  
     if not os.path.isfile(open_order_file):
-         open_order_file  = '/home/pi/bots/' + key + '/live_coins_bought.json'
+         open_order_file  = BotsHomeDir + key + '/live_coins_bought.json'
 
     if os.path.isfile(open_order_file):
-        #data = pd.read_json(open_order_file,orient='columns') #path folder of the data file
-        #with open(open_order_file, 'r') as f:
-        #   data = pd.read_json(f)
+
         data = json.load(open(open_order_file, "r"))
         df = pd.DataFrame.from_dict(data, orient="index")
+        #Hack added 8hrs to timestamp as couldnot work out to convert UTC into HK easier
         df['timestamp'] = df['timestamp'] + 28800000
         df['timestamp']= pd.to_datetime(df['timestamp'],unit='ms')
-        #df['timestamp'] = df['timestamp'].dt.tz_convert('Asia_Hong_Kong')
         df['bought_at'] = df['bought_at'].astype(float)
         df['CurrentPx'] = df['symbol'] 
         df['CurrentPx'] = df['CurrentPx'].apply(get_px)
         df['CurrentPx'] = df['CurrentPx'].astype(float)
-        #df['EstProfit'] = 
-        #df['EstProfit'] = df.apply(lambda x: (t(df['CurrentPx'])) - float((df['bought_at'])))
         df['PriceDiff'] =  df['CurrentPx'] - df['bought_at']
-        df['EstSellPx'] = df['bought_at'] * 1.02
+        df['EstSellPx'] = (df['bought_at'] * (df['take_profit']/100)) + df['bought_at']
         df = df.sort_values(by='timestamp', ascending=False)
         df = df[['timestamp', 'symbol', 'bought_at', 'CurrentPx', 'PriceDiff','EstSellPx', 'stop_loss', 'take_profit']]
         st.header('Open Positions')
-        #df['symbol'] = df['symbol'].apply(make_clickable)
-        #df = df.to_html(escape=False)
-        #st.write(df, unsafe_allow_html=True)
         st.dataframe(df.style.applymap(color_negative_red, subset=['PriceDiff']))
 
     #If Test does not exist, check for live
-    closed_trades_file = '/home/pi/bots/' + key + '/test_trades.txt'  
+    closed_trades_file = BotsHomeDir + key + '/test_trades.txt'  
     if not os.path.isfile(closed_trades_file):
-         closed_trades_file  = '/home/pi/bots/' + key + '/live_trades.txt'
+         closed_trades_file  = BotsHomeDir + key + '/live_trades.txt'
 
     if os.path.isfile(closed_trades_file):
         data = pd.read_csv(closed_trades_file, sep='\t') #path folder of the data file
@@ -173,15 +168,8 @@ def getclosedtrades(key):
         filtered = df[(df['Type'] == "Sell")]
         filtered.style.applymap(color_negative_red, subset=['Profit $'])
         st.dataframe(filtered.style.applymap(color_negative_red, subset=['Profit $']))
-        #filtered = filtered.to_html(escape=False)
-        #st.dataframe(filtered)
+      
         
-        
-
-def bg_colour_col(col):
-    colour = 'red'
-    return [('background-color: %s' % colour if col.name == 'Profit $' or i == 4 else '') for (i, x) in col.iteritems()]  
-
 def color_negative_red(value):
   """
   Colors elements in a dateframe
@@ -211,5 +199,5 @@ def app():
     with my_expander:
         clicked = my_widget('Snail')
 
-    getclosedtrades('Snail')
+    gettrades('Snail')
  
