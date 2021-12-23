@@ -15,9 +15,9 @@ app = MultiApp()
 # Add all your application here
 app.add_app("Home", home.app)
 app.add_app("Snail", snail.app)
-app.add_app("Scalper", scalper.app)
+#app.add_app("Scalper", scalper.app)
 app.add_app("Market", market.app)
-app.add_app("Reinvest", reinvest.app)
+#app.add_app("Reinvest", reinvest.app)
 
 
 # The main app
