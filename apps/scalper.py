@@ -29,13 +29,16 @@ def modification_date(filename):
 
 
 def my_widget(key):
+
     global BotsHomeDir
     # path to the saved transactions history
     BotsHomeDir = "/home/pi/bots/"
+    # path to the saved transactions history
     trading_mode = "test"
     Bot_Is_Paused = False
 
-    profile_summary_file = BotsHomeDir + key + '/test_bot_stats.json'  
+    profile_summary_file = BotsHomeDir + key \
+        + '/test_bot_stats.json'
     (col1, col2) = st.columns([1, 3])
 
     #If Test does not exist, check for live
@@ -67,6 +70,18 @@ def my_widget(key):
             b = datetime.strptime(d2, "%Y-%m-%d %H:%M")
             last_refresh = str(b - a).split('.')[0]
 
+            WarningMessage = ''
+            try:
+                tester = profile_summary.unrealised_session_profit_incfees_total
+            except:
+                profile_summary.unrealised_session_profit_incfees_perc = 0.0
+                profile_summary.unrealised_session_profit_incfees_total = 0.0
+                profile_summary.session_profit_incfees_total = 0.0
+                profile_summary.session_profit_incfees_perc = 0.0
+                WarningMessage = 'Unrealised NOT included, %Profit NOT included - Update_bot_stats and balance_report to clear - https://github.com/jthhk/BVT_GUI/blob/main/README.md'
+                col2.warning(WarningMessage)
+
+
             if (profile_summary.unrealised_session_profit_incfees_perc+profile_summary.session_profit_incfees_perc) < 0.0:
                 col1.metric('Lose',
                             str(round((profile_summary.unrealised_session_profit_incfees_total+profile_summary.session_profit_incfees_total),4)),
@@ -92,7 +107,7 @@ def my_widget(key):
                              + str(0)
                              + ' | WL: ' + str(win_ratio) + '%')
 
-            if int(last_refresh[2:4]) < 15 and int(last_refresh[0:1]) == 0:
+            if int(last_refresh.split(':')[2]) < 15 and int(last_refresh.split(':')[1]) == 00 and int(last_refresh.split(':')[0]) == 00:
                 col2.write('Refreshed: ' + str(last_refresh) + ' | Last: ' + str(last_updated)
                        + ' |  Started:' + str(started) + ' | Running:'
                        + str(run_for) + " | mode:" + str(trading_mode) + " | Paused:"  + str(Bot_Is_Paused))
@@ -100,6 +115,7 @@ def my_widget(key):
                 col2.warning('Refreshed: ' + str(last_refresh) + ' | Last: ' + str(last_updated)
                        + ' |  Started:' + str(started) + ' | Running:'
                        + str(run_for) + " | mode:" + str(trading_mode) + " | Paused:"  + str(Bot_Is_Paused))
+
 
     else:
 
@@ -189,8 +205,6 @@ def color_negative_red(value):
     color = 'green'
   
   return 'color: %s' % color
-
-
 
 def app():
     st.title('Scalper')

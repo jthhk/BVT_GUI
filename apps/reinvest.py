@@ -5,10 +5,15 @@ from types import SimpleNamespace
 
 import datetime
 from datetime import datetime
+from dateutil import tz
 
 import streamlit as st
 import os
 import streamlit.components.v1 as components
+
+import pandas as pd
+from IPython.display import HTML
+import requests
 
 #st.set_page_config(page_title='JimBot BVT Bot', page_icon='\xe2\x9c\x85', layout='wide')
 
@@ -21,6 +26,7 @@ def right(s, amount):
 def modification_date(filename):
     t = os.path.getmtime(filename)
     return datetime.fromtimestamp(t).strftime('%Y-%m-%d %H:%M')
+
 
 def my_widget(key):
 
@@ -115,21 +121,98 @@ def my_widget(key):
 
         col1.metric('N/A', '0', '0%')
         col2.info('Not started/no file')
+
+# Function to convert file path into clickable form.
+def make_clickable(link):
+    # target _blank to open new window
+    # extract clickable text to display for your link
+    text = link
+    return f'<a target="_blank" href="https://www.tradingview.com/symbols/{text}">{text}</a>'
+
+# Function to convert file path into clickable form.
+def get_px(link):
+    # target _blank to open new window
+    # extract clickable text to display for your link
+    coin = left(link,len(link)-4)
+    try:
+        response = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={coin}USDT")
+        pxdata = response.json()
+        price = pxdata["price"] 
+    except ValueError:
+        price = 0.0
+
+    return price
+    
+
+def gettrades(key):
+
+    global BotsHomeDir
+    #If Test does not exist, check for live
+    open_order_file = BotsHomeDir + key + '/test_coins_bought.json'  
+    if not os.path.isfile(open_order_file):
+         open_order_file  = BotsHomeDir + key + '/live_coins_bought.json'
+
+    if os.path.isfile(open_order_file):
+
+        data = json.load(open(open_order_file, "r"))
+        df = pd.DataFrame.from_dict(data, orient="index")
+        #Hack added 8hrs to timestamp as couldnot work out to convert UTC into HK easier
+        df['timestamp'] = df['timestamp'] + 28800000
+        df['timestamp']= pd.to_datetime(df['timestamp'],unit='ms')
+        df['bought_at'] = df['bought_at'].astype(float)
+        df['CurrentPx'] = df['symbol'] 
+        df['CurrentPx'] = df['CurrentPx'].apply(get_px)
+        df['CurrentPx'] = df['CurrentPx'].astype(float)
+        df['PriceDiff'] =  df['CurrentPx'] - df['bought_at']
+        df['EstSellPx'] = (df['bought_at'] * (df['take_profit']/100)) + df['bought_at']
+        df = df.sort_values(by='timestamp', ascending=False)
+        df = df[['timestamp', 'symbol', 'bought_at', 'CurrentPx', 'PriceDiff','EstSellPx', 'stop_loss', 'take_profit']]
+        st.header('Open Positions')
+        st.dataframe(df.style.applymap(color_negative_red, subset=['PriceDiff']))
+
+    #If Test does not exist, check for live
+    closed_trades_file = BotsHomeDir + key + '/test_trades.txt'  
+    if not os.path.isfile(closed_trades_file):
+         closed_trades_file  = BotsHomeDir + key + '/live_trades.txt'
+
+    if os.path.isfile(closed_trades_file):
+        data = pd.read_csv(closed_trades_file, sep='\t') #path folder of the data file
+        df = pd.DataFrame(data)
+        df = df.sort_values(by='Datetime', ascending=False)
+        df = df[['Datetime', 'Coin', 'Type', 'Buy Price', 'Sell Price', 'Profit $', 'Sell Reason']]
+        st.header('Closed Positions')
+        filtered = df[(df['Type'] == "Sell")]
+        filtered.style.applymap(color_negative_red, subset=['Profit $'])
+        st.dataframe(filtered.style.applymap(color_negative_red, subset=['Profit $']))
+      
         
+def color_negative_red(value):
+  """
+  Colors elements in a dateframe
+  green if positive and red if
+  negative. Does not color NaN
+  values.
+  """
+  color='black'
+  if value=='<NA>':
+    value=0
+  else:
+    value=float(value)
+
+  if value< 0:
+    color = 'red'
+  elif value > 0:
+    color = 'green'
+  
+  return 'color: %s' % color
+
 def app():
-    st.title('DashBoard')
+    st.title('Reinvest')
 
     # Per Algo
-    my_expander = st.expander('Snail', expanded=True)
-    with my_expander:
-        clicked = my_widget('Snail')
-
-
-    my_expander = st.expander('Scalper', expanded=True)
-    with my_expander:
-        clicked = my_widget('Scalper')
-
     my_expander = st.expander('JimBotReinvest', expanded=True)
     with my_expander:
         clicked = my_widget('JimBotReinvest')
 
+    gettrades('JimBotReinvest')
+ 
