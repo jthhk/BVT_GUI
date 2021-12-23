@@ -13,7 +13,6 @@ For my personal use but happy for people to reference
 - Scalper
 
 
-
 (1) bots_app.py 
 To add a new page/bot update:
 1a. import 
@@ -68,6 +67,7 @@ Notes
 * Pause is only done when the "siginal/Pause" file exists - not when manual
 * expect can be slow if large open position due to the 3rd party request for current price 
 * runs on a raspberry pi (you need to install the 64bit OS tp get streamlit installed)
+* start streamline you have to reference bots_app.py eg 'streamlite run ../UI/bots_app.py' 
 
 Screens
 
