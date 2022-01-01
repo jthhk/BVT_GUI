@@ -75,8 +75,8 @@ https://github.com/jthhk/Binance-volatility-trading-bot/blob/main/Binance_Detect
 * Pause is only done when the "siginal/Pause" file exists - not when manual
 * expect can be slow if large open position due to the 3rd party request for current price 
 * runs on a raspberry pi (you need to install the 64bit OS tp get streamlit installed)
-* start streamline you have to reference bots_app.py eg 'streamlite run ../UI/bots_app.py' 
-* If you want to add morre info - 2 places add global in balance_report and then output in update_bot_stats (ref 3b above) 
+* start streamlit you have to reference bots_app.py eg 'streamlit run ../UI/bots_app.py' 
+* If you want to add more info - 2 places add global in balance_report and then output in update_bot_stats (ref 3b above) 
 
 ## Backlog
 
