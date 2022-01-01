@@ -1,0 +1,6 @@
+colorama
+altair
+pandas
+streamlit
+matplotlib
+
