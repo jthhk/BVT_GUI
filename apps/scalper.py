@@ -153,22 +153,22 @@ def gettrades(key):
          open_order_file  = BotsHomeDir + key + '/live_coins_bought.json'
 
     if os.path.isfile(open_order_file):
-
+        st.header('Open Positions')
         data = json.load(open(open_order_file, "r"))
         df = pd.DataFrame.from_dict(data, orient="index")
         #Hack added 8hrs to timestamp as couldnot work out to convert UTC into HK easier
-        df['timestamp'] = df['timestamp'] + 28800000
-        df['timestamp']= pd.to_datetime(df['timestamp'],unit='ms')
-        df['bought_at'] = df['bought_at'].astype(float)
-        df['CurrentPx'] = df['symbol'] 
-        df['CurrentPx'] = df['CurrentPx'].apply(get_px)
-        df['CurrentPx'] = df['CurrentPx'].astype(float)
-        df['PriceDiff'] =  df['CurrentPx'] - df['bought_at']
-        df['EstSellPx'] = (df['bought_at'] * (df['take_profit']/100)) + df['bought_at']
-        df = df.sort_values(by='timestamp', ascending=False)
-        df = df[['timestamp', 'symbol', 'bought_at', 'CurrentPx', 'PriceDiff','EstSellPx', 'stop_loss', 'take_profit']]
-        st.header('Open Positions')
-        st.dataframe(df.style.applymap(color_negative_red, subset=['PriceDiff']))
+        if not df.empty:
+            df['timestamp'] = df['timestamp'] + 28800000
+            df['timestamp']= pd.to_datetime(df['timestamp'],unit='ms')
+            df['bought_at'] = df['bought_at'].astype(float)
+            df['CurrentPx'] = df['symbol'] 
+            df['CurrentPx'] = df['CurrentPx'].apply(get_px)
+            df['CurrentPx'] = df['CurrentPx'].astype(float)
+            df['PriceDiff'] =  df['CurrentPx'] - df['bought_at']
+            df['EstSellPx'] = (df['bought_at'] * (df['take_profit']/100)) + df['bought_at']
+            df = df.sort_values(by='timestamp', ascending=False)
+            df = df[['timestamp', 'symbol', 'bought_at', 'CurrentPx', 'PriceDiff','EstSellPx', 'stop_loss', 'take_profit']]
+            st.dataframe(df.style.applymap(color_negative_red, subset=['PriceDiff']))
 
     #If Test does not exist, check for live
     closed_trades_file = BotsHomeDir + key + '/test_trades.txt'  
@@ -176,14 +176,16 @@ def gettrades(key):
          closed_trades_file  = BotsHomeDir + key + '/live_trades.txt'
 
     if os.path.isfile(closed_trades_file):
+        st.header('Closed Positions')
         data = pd.read_csv(closed_trades_file, sep='\t') #path folder of the data file
         df = pd.DataFrame(data)
-        df = df.sort_values(by='Datetime', ascending=False)
-        df = df[['Datetime', 'Coin', 'Type', 'Buy Price', 'Sell Price', 'Profit $', 'Sell Reason']]
-        st.header('Closed Positions')
-        filtered = df[(df['Type'] == "Sell")]
-        filtered.style.applymap(color_negative_red, subset=['Profit $'])
-        st.dataframe(filtered.style.applymap(color_negative_red, subset=['Profit $']))
+        if not df.empty:
+            df = df.sort_values(by='Datetime', ascending=False)
+            df = df[['Datetime', 'Coin', 'Type', 'Buy Price', 'Sell Price', 'Profit $', 'Sell Reason']]
+            filtered = df[(df['Type'] == "Sell")]
+            filtered.style.applymap(color_negative_red, subset=['Profit $'])
+            st.dataframe(filtered.style.applymap(color_negative_red, subset=['Profit $']))
+      
       
         
 def color_negative_red(value):
