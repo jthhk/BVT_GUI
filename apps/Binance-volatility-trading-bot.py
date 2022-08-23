@@ -5,10 +5,15 @@ from types import SimpleNamespace
 
 import datetime
 from datetime import datetime
+from dateutil import tz
 
 import streamlit as st
 import os
 import streamlit.components.v1 as components
+
+import pandas as pd
+from IPython.display import HTML
+import requests
 
 #st.set_page_config(page_title='JimBot BVT Bot', page_icon='\xe2\x9c\x85', layout='wide')
 
@@ -21,6 +26,7 @@ def right(s, amount):
 def modification_date(filename):
     t = os.path.getmtime(filename)
     return datetime.fromtimestamp(t).strftime('%Y-%m-%d %H:%M')
+
 
 def my_widget(key):
 
@@ -84,7 +90,7 @@ def my_widget(key):
                            + ' | Loss: '
                            + str(profile_summary.tradeLosses)
                            + ' | WL: ' + str(win_ratio) + '%')
-            elif profile_summary.historicProfitIncFees_Percent > 0.0:
+            elif profile_summary.historicProfitIncFees_Percent > 0.0 or (profile_summary.unrealised_session_profit_incfees_perc+profile_summary.session_profit_incfees_perc) > 0.0:
                 col1.metric('Profit',
                             str(round((profile_summary.unrealised_session_profit_incfees_total+profile_summary.session_profit_incfees_total),4)),
                             str(round((profile_summary.unrealised_session_profit_incfees_perc+profile_summary.session_profit_incfees_perc),4)))
@@ -115,14 +121,114 @@ def my_widget(key):
 
         col1.metric('N/A', '0', '0%')
         col2.info('Not started/no file')
+
+# Function to convert file path into clickable form.
+def make_clickable(link):
+    # target _blank to open new window
+    # extract clickable text to display for your link
+    text = link
+    return f'<a target="_blank" href="https://www.tradingview.com/symbols/{text}">{text}</a>'
+
+# Function to convert file path into clickable form.
+def get_px(link):
+    # target _blank to open new window
+    # extract clickable text to display for your link
+    coin = left(link,len(link)-4)
+    try:
+        response = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={coin}USDT")
+        pxdata = response.json()
+        price = pxdata["price"] 
+    except ValueError:
+        price = 0.0
+
+    return price
+    
+
+def gettrades(key):
+
+    global BotsHomeDir
+    #If Test does not exist, check for live
+    open_order_file = BotsHomeDir + key + '/test_coins_bought.json'  
+    if not os.path.isfile(open_order_file):
+         open_order_file  = BotsHomeDir + key + '/live_coins_bought.json'
+
+    if os.path.isfile(open_order_file):
+
+        #FILE -["symbol","orderId","timestamp","avgPrice","volume","tradeFeeBNB","tradeFeeUnit","take_profit","stop_loss","Lastpx","Profit"]
+
+        #data = json.load(open(, "r"))
+        #df = pd.DataFrame.from_dict(data, orient="index")
+        df = pd.read_json(open_order_file, orient ='split', compression = 'infer')
+        df.head()
+        df = df.drop(['orderId','tradeFeeBNB','tradeFeeUnit','tradeFeeBNB'], 1)
+        #Hack added 8hrs to timestamp as couldnot work out to convert UTC into HK easier
+        #df['timestamp'] = df['timestamp'] + 28800000
+        #df['timestamp']= pd.to_datetime(df['timestamp'],unit='ms')
+        #df['CurrentPx'] = df['symbol'] 
+
+        #df['bought_at'] = df['bought_at'].astype(float)
+        #df['CurrentPx'] = df['CurrentPx'].apply(get_px)
+        #df['CurrentPx'] = df['CurrentPx'].astype(float)
+        #df['PriceDiff'] =  df['CurrentPx'] - df['bought_at']
+        #df['EstSellPx'] = (df['bought_at'] * (df['take_profit']/100)) + df['bought_at']
+        #df['bought_at'] = df['avgPrice'].astype(float)
+        #df['CurrentPx'] = df['Lastpx'].apply(get_px)
+        #df['CurrentPx'] = df['Lastpx'].astype(float)
+        #df['bought_at'] = df['avgPrice']
+        #df['CurrentPx'] = df['Lastpx']
+        #df = df[['timestamp', 'symbol', 'bought_at', 'CurrentPx', 'PriceDiff','EstSellPx', 'stop_loss', 'take_profit']]
+        #df['PriceDiff'] =  df['Lastpx'] - df['avgPrice']
+        #df['EstSellPx'] = "9" 
+        #(float(df['avgPrice']) * (float(df['take_profit']/100))) + float(df['avgPrice'])
+        #df = df.sort_values(by='timestamp', ascending=False)
+        #df = df[['timestamp', 'symbol', 'avgPrice', 'Lastpx', 'PriceDiff','EstSellPx', 'stop_loss', 'Profit']]
+        st.header('Open Positions')
+        st.dataframe(df.style.applymap(color_negative_red, subset=['Profit']))
+        #st.dataframe(data)
+
+    #If Test does not exist, check for live
+    closed_trades_file = BotsHomeDir + key + '/test_trades.txt'  
+    if not os.path.isfile(closed_trades_file):
+         closed_trades_file  = BotsHomeDir + key + '/live_trades.txt'
+
+    if os.path.isfile(closed_trades_file):
+        data = pd.read_csv(closed_trades_file, sep='\t') #path folder of the data file
+        df = pd.DataFrame(data)
+        df = df.sort_values(by='Datetime', ascending=False)
+        df = df[['Datetime', 'Coin', 'Type', 'Buy Price', 'Sell Price', 'Profit $', 'Sell Reason']]
+        st.header('Closed Positions')
+        filtered = df[(df['Type'] == "Sell")]
+        filtered.style.applymap(color_negative_red, subset=['Profit $'])
+        st.dataframe(filtered.style.applymap(color_negative_red, subset=['Profit $']))
+      
         
+def color_negative_red(value):
+  """
+  Colors elements in a dateframe
+  green if positive and red if
+  negative. Does not color NaN
+  values.
+  """
+  color='black'
+  if value=='<NA>':
+    value=0
+  else:
+    value=float(value)
+
+  if value< 0:
+    color = 'red'
+  elif value > 0:
+    color = 'green'
+  
+  return 'color: %s' % color
+  
 def app():
-    st.title('DashBoard')
+    st.title('JTH Snailv2')
 
     # Per Algo
-    my_expander = st.expander('Snailv2', expanded=True)
+    my_expander = st.expander('Binance-volatility-trading-bot', expanded=True)
     with my_expander:
-        clicked = my_widget('Snailv2')
+        clicked = my_widget('Binance-volatility-trading-bot')
 
-
-
+    gettrades('Binance-volatility-trading-bot')
+ 

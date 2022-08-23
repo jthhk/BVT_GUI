@@ -1,0 +1,1 @@
+streamlit run C:\github\BVT_GUI\bots_app.py
