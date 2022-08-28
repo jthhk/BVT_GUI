@@ -4,6 +4,7 @@ For my personal use but happy for people to reference
 
 * install Streamlit
 * each bots folder you need to manually  
+* This runs against my fork, please do not ask for support of other forks
 
 ## (0) Copy to same folder as your BVT Bots 
 
