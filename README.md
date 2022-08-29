@@ -4,6 +4,7 @@ For my personal use but happy for people to reference
 
 * install Streamlit
 * each bots folder you need to manually  
+* This runs against my fork, please do not ask for support of other forks
 
 ## (0) Copy to same folder as your BVT Bots 
 
@@ -59,12 +60,12 @@ unrealised_session_profit_incfees_total, unrealised_session_profit_incfees_perc,
 **update_bot_stats():**
 
 copy whole function into your fork:- 
-https://github.com/jthhk/Binance-volatility-trading-bot/blob/main/Binance_Detect_Mooningsv1.py#L1081
+https://github.com/jthhk/Binance-volatility-trading-bot/blob/main/Binance_Detect_Mooningsv2.py#L1081
 
 **def balance_report(last_price):**
 
 copy the global line into your fork:-
-https://github.com/jthhk/Binance-volatility-trading-bot/blob/main/Binance_Detect_Mooningsv1.py#L413
+https://github.com/jthhk/Binance-volatility-trading-bot/blob/main/Binance_Detect_Mooningsv2.py#L413
 
 
 ## Notes
